@@ -2,14 +2,73 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.IO;
 
+//gerar o grafo em si e suas operações
 namespace Grafo_2022_2
 {
+    //Gerar os vertices do Grafo - objeto
+    public class vertice
+    {
+        //gerar um objeto Vertice com os atributos
+        public string Id_Vertice;
+        public int Id_Peso;
+        public int Id_Cor = 0;
+
+        //gerar uma lista de adjacencias do vertice
+        public List<aresta> adjacencias = new List<aresta>();
+
+        //Usar para Djikstra
+        public int rotulo; //rotular o vertice
+        public bool permanente = false;
+
+        //pega o atributo do valor da aresta e aponta para seu destino
+        public class aresta
+        {
+            //Pega e atribui um valor na aresta
+            public string Id_Destino; //identifica a vertice destino - não orientado
+            public int Peso_Distancia; //gera um valor entre os vertices - da um peso para a aresta
+
+        }
+    }
     public class Grafo
     {
+        //Lista teste utilizado para o metodo de teste de funcionamento dos metodos gerados, não utilizada mais
+        public List<vertice> Teste_vertices = new List<vertice>();
+        //função para realizar testes, total convicção que funciona
+        public void preencheGrafo()
+        {
+            vertice v;
+            for (int i = 1; i < 4; i++)
+            {
+                v = new vertice();
+                v.Id_Vertice = i.ToString(); //nomeia
+                v.Id_Peso = i; //da peso pro vertice
+                Teste_vertices.Add(v); //adiciona na lista
+                numVertices++;
+            }
+        }
+        public void PreencherVertices()//função para realizar testes
+        {
+            vertice v;
+            for (int i = 0; i < 10; i++)
+            {
+                v = new vertice();
+                v.Id_Vertice = i.ToString();
+                v.Id_Peso = i;
+                Teste_vertices.Add(v);
+                vertices.Add(v);
+                numVertices++;
+            }
+        }
+        public void CriarGrafoTeste()//função para realizar testes
+        {
+                PreencherVertices();
+        }
+
         //Gerar uma lista com os vertices e seus pesos e preencher a matriz com os vertices.
         public List<vertice> vertices = new List<vertice>();
+
         //Gerar um contador de vertices no Grafo
         public int numVertices = 0;
 
@@ -17,15 +76,22 @@ namespace Grafo_2022_2
         public void exibirGrafo()
         {
             //Valida a quantidade de vertices, inciando em 0.
-            Console.WriteLine("Grafo possui {0} vértices: ", numVertices);
+            Console.WriteLine("Grafo possui {0} vértices. /n/n", numVertices);
+
+            //informa todos os vertices e seus atributos
             foreach (vertice v in vertices)
             {
                 //Gerar informação do identificador do vertice, seu peso e sua cor
-                Console.Write("Vértice {0}, valor: {1}, cor: {2} é adjacente a: ", v.ID_Vertice, v.id_Peso, v.idCor);
-
+                Console.Write("Vértice {0}, valor: {1}, cor: {2} é adjacente a: ", v.Id_Vertice, v.Id_Peso, v.Id_Cor);
+                //Gerar um relatório de quais os vertices que eles alcançam - ao menos deveria
+                foreach (vertice.aresta V_aux in v.adjacencias)
+                    Console.Write("{0} ", V_aux.Id_Destino);
+                //informa todas as arestas e onde elas alcançam
                 foreach (vertice.aresta a in v.adjacencias)
-                    Console.Write("{0} ", a.destino);
-
+                {
+                    Console.WriteLine("{0} ", a.Id_Destino);
+                    Console.WriteLine("Distancia de {0} a {1}: {2}", v.Id_Vertice, a.Id_Destino, a.Peso_Distancia);
+                }
                 Console.WriteLine();
             }
         }
@@ -37,173 +103,184 @@ namespace Grafo_2022_2
 
             i = 0;
             //Corre a lista e verifica nome a nome a existencia do vértice
-            while ((i < vertices.Count) && (vertices.ElementAt(i).ID_Vertice != n))
+            while ((i < vertices.Count) && (vertices.ElementAt(i).Id_Vertice != n))
 
                 i++;
 
             if (i == vertices.Count) //se não tiver retorno, o metodo fica vazio
-                return Aux=null;
+                return Aux = null;
             else //se houver algum retorno, ele volta o vertice instanciado.
-                Aux = vertices.ElementAt(i); 
-                return Aux;
+                Aux = vertices.ElementAt(i);
+            return Aux;
         }
-
-        public void incluirVertice(string _name, int n)
+        //Adicionar vertices
+        public void incluirVertice(string _Name, int _Peso)
         {
+            //vertice auxiliar
             vertice v = new vertice();
-
-            v.ID_Vertice = _name;
-            v.id_Peso = n;
+            v.Id_Vertice = _Name;
+            v.Id_Peso = _Peso;
 
             //envia o vertice que está sendo inserido no sistema
-            if (existeVertice(v.ID_Vertice) != null)
-                Console.WriteLine("Vértice {0} já existe no Grafo.", v.ID_Vertice);
+            if (existeVertice(v.Id_Vertice) != null)
+                Console.WriteLine("Vértice {0} já existe no Grafo.", v.Id_Vertice);
             else //após a validação se não existir ele é inserido no sistema
             {
+                //Adiciona o vertice na lista
                 vertices.Add(v);
                 numVertices++;
             }
         }
-
-
-        public void incluirAresta(string v1, string v2, int v3, int v4)
+        //adicionar arestas não orientadas - ao menos deveria
+        public void incluirAresta(string V_a1, string V_a2, int Peso_Distancia)
         {
             vertice VerAux1, VerAux2; //dois vertices auxiliares para instanciar
             vertice.aresta Va; //instaciar a aresta do vertice
             int i;
 
-            if (existeVertice(v1) == null)
-                Console.WriteLine("O vértices ({0}) não existe no Grafo.",v1);               
-
-            else if (existeVertice(v2) == null)
-                Console.WriteLine("O vértice ({0}) não existe no Grafo.", v2);
+            //Valida se existe os vertices no grafo
+            if (existeVertice(V_a1) != null || existeVertice(V_a2) != null)
+                Console.WriteLine("Um dos dois vértices ({0} ou {1}) não existe no grafo.", V_a1, V_a2);
             else
             {
-                if (adjacentes(v1, v2))
-                    Console.WriteLine("{0} e {1} já são adjacentes no Grafo.", v1, v2);
+                if (adjacentes(V_a1, V_a2))
+                    Console.WriteLine("{0} e {1} já são adjacentes no grafo.", V_a1, V_a2);
                 else
                 {
-                    //setar as vertices auxiliares
-                    VerAux1 = existeVertice(v1);
-                    VerAux2 = existeVertice(v2);
+                    //setar as vertices auxiliares ponta a ponta na lista de arestas
+                    //vertice inicial
+                    VerAux1 = existeVertice(V_a1);
+                    //vertice final
+                    VerAux2 = existeVertice(V_a2);
 
-                    //gerar a aresta e apontar seu destino
+                    //gerar a aresta e apontar seu Id_Destino
                     Va = new vertice.aresta();
-                    Va.destino = VerAux2.id_Peso;
+                    Va.Id_Destino = VerAux2.Id_Vertice;
                     i = 0;
 
-                    while ((i < vertices.Count) && (vertices.ElementAt(i).id_Peso != VerAux1.id_Peso))
+                    while ((i < vertices.Count) && (vertices.ElementAt(i).Id_Vertice != VerAux1.Id_Vertice))
                         i++;
-
+                    //Gera aresta do vertice 1 -> 2 e adiciona como objeto
                     vertices.ElementAt(i).adjacencias.Add(Va);
 
-                    //gerar a aresta e apontar seu destino
-
+                    //gerar a aresta e apontar seu Id_Destino
                     Va = new vertice.aresta();
-                    Va.destino = VerAux1.id_Peso;
+                    Va.Id_Destino = VerAux1.Id_Vertice;
                     i = 0;
 
-                    while ((i < vertices.Count) && (vertices.ElementAt(i).id_Peso != VerAux2.id_Peso))
+                    while ((i < vertices.Count) && (vertices.ElementAt(i).Id_Vertice != VerAux2.Id_Vertice))
                         i++;
-
+                    //Gera aresta do vertice 2 -> 1 e adiciona como objeto
                     vertices.ElementAt(i).adjacencias.Add(Va);
                 }
             }
         }
-        //gerar adjacencia
-        public bool adjacentes(string v1 ,string v2)
+        //Valida se já existe a ajacencia entre os vertices
+        public bool adjacentes(string V_a1, string V_a2)
         {
             vertice v;
             int i;
-            //gerar uma validação por nome
-            if (existeVertice(v1).ID_Vertice!=null && existeVertice(v2).ID_Vertice!=null)
+
+            //primeiro validar a existencia dos vertices
+            if (existeVertice(V_a1) != null && existeVertice(V_a2) != null)
             {
                 i = 0;
-
-                while (vertices.ElementAt(i).ID_Vertice != v1)
+                //varrer a lista de vertices e encontrar o vertice inicial
+                while (vertices.ElementAt(i).Id_Vertice != V_a1)
                     i++;
 
                 v = vertices.ElementAt(i);
 
                 i = 0;
 
-                while ((i < v.adjacencias.Count) && (v.adjacencias.ElementAt(i).destino != v2))
+                //varrer a lista de vertices e encontrar o vertice inicial e validar se encontra alguma adjacencia entre eles
+                while ((i < v.adjacencias.Count) && (v.adjacencias.ElementAt(i).Id_Destino != V_a2))
                     i++;
 
+                //se rodar toda a lista e não encotrar
                 if (i == v.adjacencias.Count)
                     return (false);
+                //se rodar toda a lista e encotrar
                 else
                     return (true);
             }
             else
+                //primeiro validar a existencia dos vertices e se não existir finaliza
                 return (false);
         }
 
-        public int posicaoVertice(int n)
+        public int posicaoVertice(string V_a1)
         {
             int i = 0;
+            //validar a existencia do vertice e suas adjacencias
 
-            while ((i < vertices.Count) && (vertices.ElementAt(i).id_Peso != n))
+            //verifica a existencia de vertices e valida todas suas adjacencias
+            while ((existeVertice(V_a1) != null) && (i < existeVertice(V_a1).adjacencias.Count) && (vertices.ElementAt(i).Id_Vertice != existeVertice(V_a1).Id_Vertice))
                 i++;
 
             if (i == vertices.Count)
                 return (-1);
             else
                 return (i);
-        }
 
-        public int posicaoAresta(List<vertice.aresta> adjacencias, int n)
+        }
+        //pega a lista de adjacencia e valida se existe o vertice e gera a sequencia de posição ao vertice 1 -> 2
+        public int posicaoAresta(List<vertice.aresta> adjacencias, string V_a1)
         {
             int i = 0;
 
-            while ((i < adjacencias.Count) && (adjacencias.ElementAt(i).destino != n))
+            //validar a existencia do vertice e suas arestas
+            while ((existeVertice(V_a1) != null) && (i < adjacencias.Count) && (adjacencias.ElementAt(i).Id_Destino != V_a1))
                 i++;
 
             if (i == adjacencias.Count)
                 return (-1);
             else
                 return (i);
-        }
 
-        public void removerVertice(vertice n)
+        }
+        //remover o vertice
+        public void removerVertice(string V_a1)
         {
             int i;
-
-            if (!existeVertice(n.))
-                Console.WriteLine("O vértice {0} não existe no Grafo.", n);
+            //validar a existencia do vertice no Grafo
+            if (existeVertice(V_a1) != null)
+                Console.WriteLine("O vértice {0} não existe no Grafo.", V_a1);
             else
             {
-                foreach (vertice v in vertices)
+                foreach (vertice V_a2 in vertices)
                 {
-                    i = posicaoAresta(v.adjacencias, n);
-
+                    //valida as adjacencias de vertices
+                    i = posicaoAresta(V_a2.adjacencias, V_a1);
                     if (i != -1)
-                        removerAresta(n, v.id_Peso);
+                        //valida as arestas e remove
+                        removerAresta(V_a1, V_a2.Id_Vertice);
                 }
-
-                vertices.RemoveAt(posicaoVertice(n));
+                //remove vertices na lista corretamente
+                vertices.RemoveAt(posicaoVertice(V_a1));
                 numVertices--;
             }
         }
-
-        public void removerAresta(int vi, int vf)
+        //Remover aresta
+        public void removerAresta(string V_a1, string V_a2)
         {
+            //auxiliar os posicionamentos dos vertices e remover as arestas corretamente
             int i, j;
 
-            if (!adjacentes(vi, vf))
-                Console.WriteLine("Os vértices {0} e {1} não são adjacentes.", vi, vf);
+            if (!adjacentes(V_a1, V_a2))
+                Console.WriteLine("Os vértices {0} e {1} não são adjacentes.", V_a1, V_a2);
             else
             {
-                i = posicaoVertice(vi);
-                j = posicaoAresta(vertices.ElementAt(i).adjacencias, vf);
+                i = posicaoVertice(V_a1);
+                j = posicaoAresta(vertices.ElementAt(i).adjacencias, V_a2);
                 vertices.ElementAt(i).adjacencias.RemoveAt(j);
 
-                i = posicaoVertice(vf);
-                j = posicaoAresta(vertices.ElementAt(i).adjacencias, vi);
+                i = posicaoVertice(V_a2);
+                j = posicaoAresta(vertices.ElementAt(i).adjacencias, V_a1);
                 vertices.ElementAt(i).adjacencias.RemoveAt(j);
             }
         }
-
+        //Validar se o Grafo é completo
         public bool completo()
         {
             foreach (vertice v in vertices)
@@ -212,7 +289,7 @@ namespace Grafo_2022_2
 
             return (true);
         }
-
+        //Validar se o Grafo é completamente desconexo
         public bool totalmenteDesconexo()
         {
             foreach (vertice v in vertices)
@@ -221,128 +298,65 @@ namespace Grafo_2022_2
 
             return (true);
         }
-
+        //Validar se o Grafo existe
         public bool vazio()
         {
             return (numVertices == 0);
         }
-
+        //apagar todo o grafo gerado
         public void reiniciarGrafo()
         {
-            vertices.Clear();
-            numVertices = 0;
-        }
-
-        public Grafo gerarComplemento()
-        {
-            int i, j;
-            Grafo GC = new Grafo();
-
-            foreach (vertice v in vertices)
-                GC.incluirVertice(v.id_Peso);
-
-            for (i = 0; i < numVertices; i++)
-                for (j = i + 1; j < numVertices; j++)
+            Console.WriteLine("Você deseja salvar o grafo? /n1 - Sim/n2 - Não");
+            int Opcao = int.Parse(Console.ReadLine());
+            do
+            {
+                switch (Opcao)
                 {
-                    if (!adjacentes(vertices.ElementAt(i).id_Peso, vertices.ElementAt(j).id_Peso))
-                        GC.incluirAresta(vertices.ElementAt(i).id_Peso, vertices.ElementAt(j).id_Peso);
+                    case 1:
+                        SalvarGrafo();
+                        break;
+                    case 2:
+                vertices.Clear();
+                numVertices = 0;
+                break;
+            }
+            } while (true);
+        }
+        //Salvar todo o grafo gerado - ref: https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/linq/how-to-compute-column-values-in-a-csv-text-file-linq
+        public void SalvarGrafo() 
+        {
+            //criar uma pasta no c:
+            string Pasta_Grafo = @"C:\Grafo_Heron_2022\dados/";
+
+            if (!Directory.Exists(Pasta_Grafo))
+                Directory.CreateDirectory(Pasta_Grafo);
+            string[] teste = File.ReadAllLines(Path.Combine(Pasta_Grafo, "Grafo.csv"));
+            //gerar o arquivo CSV
+            using StreamWriter Salvar_Grafo_Gerado = new StreamWriter(Path.Combine(Pasta_Grafo, "Grafo.csv"));
+            //using StreamWriter Salvar_Grafo_Gerado2 = new StreamWriter((@"C:\Grafo_Heron_2022dados//Grafo.txt"), true, Encoding.ASCII);
+
+            //salvar as informações do objeto vertice
+            foreach (vertice v in vertices)
+            {
+                foreach (vertice.aresta A_Aux in v.adjacencias)
+                {
+                    Salvar_Grafo_Gerado.WriteLine(A_Aux.Id_Destino);
+                    Salvar_Grafo_Gerado.WriteLine(A_Aux.Id_Destino);
                 }
-
-            return (GC);
-        }
-
-        public void colorirGrafo()
-        {
-            int[] cores = new int[vertices.Count];
-            List<vertice> adjacentes;
-            int aux = 0;
-            int opc;
-
-            for (int i = 0; i < cores.Length; i++)
-            {
-                cores[i] = i + 1;
+                Salvar_Grafo_Gerado.WriteLine(v.Id_Vertice);
+                Salvar_Grafo_Gerado.WriteLine(v.Id_Peso);
+                Salvar_Grafo_Gerado.WriteLine(v.Id_Cor); //csv
+                // Salvar_Grafo_Gerado2.Equals(v); //txt
+                // Salvar_Grafo_Gerado.Close();
+                //salva as informações de arestas
+                foreach (vertice.aresta A_Aux in v.adjacencias)
+                {
+                    Salvar_Grafo_Gerado.WriteLine(A_Aux.Id_Destino);
+                    Salvar_Grafo_Gerado.WriteLine(A_Aux.Id_Destino);
+                }
             }
-
-            Console.WriteLine("Digite a opção de coloração: \n-pior solução = 1\n-greedy = 2");
-            opc = int.Parse(Console.ReadLine());
-            switch (opc)
-            {
-                case 1://colore todos os vertices de uma cor
-                    foreach (vertice v in vertices)
-                    {
-                        v.idCor = cores[aux];
-                        aux++;
-                    }
-                    break;
-                case 2://algoritmo greedy, atribui em sequencia as cores verificando apenas se ela não está sendo utilizada por um adjacente
-                    vertices[0].idCor = cores[0];
-                    for (int j = 1; j < vertices.Count; j++)//para cada vertice
-                    {
-                        adjacentes = new List<vertice>();
-                        foreach (vertice.aresta a in vertices[j].adjacencias)//para cada adjacente ao vertice j
-                        {
-                            for (int k = 0; k < vertices.Count; k++)//para cada vertice na lista de vertices
-                            {
-                                if (a.destino == vertices[k].id_Peso)//verifica se o vertice na lista é adj ao vertice j
-                                {
-                                    adjacentes.Add(vertices[k]); //adiciona a lista os vertices adj ao j
-                                }
-                            }
-                        }
-
-                        Console.WriteLine("vertice {0} tem {1} adjacentes", vertices[j].id_Peso, adjacentes.Count);
-
-                        for (int i = 0; i < cores.Length; i++)//para cada cor
-                        {
-                            if (vertices[j].idCor == 0)
-                            {
-                                int contador = 0;
-                                for (int k = 0; k < adjacentes.Count; k++)//para cada adjacente de j
-                                {
-                                    if (adjacentes[k].idCor != cores[i])//se a cor não esta sendo utilizada por um adjacente
-                                    {
-                                        contador++;
-                                    }
-                                }
-                                if (contador == adjacentes.Count)//se a cor não está sendo utilizada por nenhum dos adjacentes
-                                {
-                                    Console.WriteLine("colorindo {0} de {1}", vertices[j].id_Peso, cores[i]);
-                                    vertices[j].idCor = cores[i];//colore o vertice com aquela cor;
-                                }
-                            }
-                        }
-                    }
-                    break;
-            }
-
-        }
-
-        public void preencheGrafo()//função para realizar testes
-        {
-            vertice v;
-            for (int i = 1; i < 4; i++)
-            {
-                v = new vertice();
-                v.ID_Vertice = i.ToString();
-                v.id_Peso = i;
-                vertices.Add(v);
-                numVertices++;
-            }
+            Console.WriteLine("Arquivo Salvo");
+            Console.ReadKey();
         }
     }
-    public class vertice
-    {
-
-        //gerar um objeto Vertice com os atributos
-        public string ID_Vertice;
-        public int id_Peso;
-        public int idCor = 0;
-        public List<aresta> adjacencias = new List<aresta>();
-        //pega o atributo do valor da aresta
-        public class aresta
-        {
-            public int destino;
-        }
-    }
-    
 }
