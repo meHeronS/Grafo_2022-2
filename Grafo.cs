@@ -330,22 +330,22 @@ namespace Grafo_2022_2
 
             if (!Directory.Exists(Pasta_Grafo))
                 Directory.CreateDirectory(Pasta_Grafo);
-            string[] teste = File.ReadAllLines(Path.Combine(Pasta_Grafo, "Grafo.csv"));
-            //gerar o arquivo CSV
+            //string[] teste = File.ReadAllLines(Path.Combine(Pasta_Grafo, "Grafo.csv"));
+            //gerar o arquivo CSV na pasta grafo em C:
             using StreamWriter Salvar_Grafo_Gerado = new StreamWriter(Path.Combine(Pasta_Grafo, "Grafo.csv"));
             //using StreamWriter Salvar_Grafo_Gerado2 = new StreamWriter((@"C:\Grafo_Heron_2022dados//Grafo.txt"), true, Encoding.ASCII);
 
             //salvar as informações do objeto vertice
             foreach (vertice v in vertices)
             {
+                Salvar_Grafo_Gerado.Write("Teste id vertice: {0}", v.Id_Vertice);
+                Salvar_Grafo_Gerado.WriteLine(v.Id_Peso);
+                Salvar_Grafo_Gerado.WriteLine(v.Id_Cor); //csv
                 foreach (vertice.aresta A_Aux in v.adjacencias)
                 {
                     Salvar_Grafo_Gerado.WriteLine(A_Aux.Id_Destino);
                     Salvar_Grafo_Gerado.WriteLine(A_Aux.Id_Destino);
                 }
-                Salvar_Grafo_Gerado.WriteLine(v.Id_Vertice);
-                Salvar_Grafo_Gerado.WriteLine(v.Id_Peso);
-                Salvar_Grafo_Gerado.WriteLine(v.Id_Cor); //csv
                 // Salvar_Grafo_Gerado2.Equals(v); //txt
                 // Salvar_Grafo_Gerado.Close();
                 //salva as informações de arestas
