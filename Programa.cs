@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Collections;
+using System.Diagnostics;
 
 namespace Grafo_2022_2
 {
@@ -44,6 +46,8 @@ namespace Grafo_2022_2
                 Grafo G = new Grafo();
                 Algoritmo_1 A1 = new Algoritmo_1();
                 Colorir_Grafo C = new Colorir_Grafo();
+                NAIVE nAive = new NAIVE();
+                SalvaGrafo salvaGrafo = new SalvaGrafo();
                 do
                 {
                     Menu = menu();
@@ -54,7 +58,8 @@ namespace Grafo_2022_2
                         case 0:
                             Console.Clear();
                             G.CriarGrafoTeste();
-                            Console.WriteLine("Vertices para teste criados");                            
+                            Console.WriteLine("10 Vertices para teste criados");
+                            Console.WriteLine("Aperte qualquer tecla para continuar");
                             Console.ReadKey();
                             break;
 
@@ -155,10 +160,20 @@ namespace Grafo_2022_2
                             break;
 
                         case 10: // reiniciar grafo
-                            Console.Clear();
-                            G.reiniciarGrafo();
-                            Console.ReadKey();
-                            break;
+                            Console.WriteLine("Você deseja salvar o grafo? \n1 - Sim\n2 - Não");
+                            int Opcao = int.Parse(Console.ReadLine());
+                            do
+                            {
+                                switch (Opcao)
+                                {
+                                    case 1:
+                                        salvaGrafo.SalvarGrafo(G);
+                                        break;
+                                    case 2:
+                                        G.ReiniciarGrafo();
+                                        break;
+                                }
+                            } while (true);
 
                         case 11: //colorir os vertices
                             Console.Clear();
@@ -169,24 +184,33 @@ namespace Grafo_2022_2
 
                         case 12: // algoritmo de Dijkstra - tentativa - ref: https://eximia.co/o-algoritmo-de-dijkstra-em-c/
                             Console.Clear();
+                            Console.WriteLine("Algoritmo de Djkistra");
+
                             Console.Write("Informe vértice de origem: ");
                             Id_Name1 = Console.ReadLine();
                             Console.Write("Informe vértice de destino: ");
                             Id_Name2 = Console.ReadLine();
                             //passar o grafo e fazer um caminho de Djikstra entre os vertices
                             A1.A_dijkstra(G, Id_Name1, Id_Name2);
-                            Console.WriteLine("Algoritmo de Djkistra");
                             Console.ReadKey();
                             break;
 
-                        case 13: //metodo de salvar arquivo com todos os dados do grafo
+                        case 13: //metodo de salvar arquivo com todos os dados do grafo. sobrescreve o arquivo já gerado. não consegui gerar versões: (1)(2)
                             Console.Clear();
-                            G.SalvarGrafo();
+                            salvaGrafo.SalvarGrafo(G);
                             //SalvarGrafo();
                             Console.ReadKey();
                             break;
+                        case 14: //metodo para tentar usar NAIVA- TARJAN
+// tests simple model presented on https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
+                            Console.Clear();
+                            Console.WriteLine("Algoritmo de Tarjan");
+                            //recebe a lista de vertices para testar, entendi que é assim                            
+                            var lista_ciclo = nAive.DetectaCiclo(G.vertices);                            
+                            Console.ReadKey();
+                            break;
                     }
-                } while (Menu != 14);
+                } while (Menu != 15);
             }
         }
         

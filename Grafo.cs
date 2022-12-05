@@ -12,14 +12,14 @@ namespace Grafo_2022_2
     {
         //gerar um objeto Vertice com os atributos
         public string Id_Vertice;
-        public int Id_Peso;
-        public int Id_Cor = 0;
+        public int Id_Peso = 0;
+        public int Id_Cor = 99;
 
         //gerar uma lista de adjacencias do vertice
         public List<aresta> adjacencias = new List<aresta>();
 
         //Usar para Djikstra
-        public int rotulo; //rotular o vertice
+        public int rotulo = 0; //rotular o vertice
         public bool permanente = false;
 
         //pega o atributo do valor da aresta e aponta para seu destino
@@ -46,8 +46,15 @@ namespace Grafo_2022_2
                 v.Id_Peso = i; //da peso pro vertice
                 Teste_vertices.Add(v); //adiciona na lista
                 numVertices++;
+                if (i == 2)
+                {
+                    incluirAresta(1.ToString(), 2.ToString(), 100);
+                    adjacentes(1.ToString(), 2.ToString());
+                }
             }
+
         }
+        //função para realizar testes
         public void PreencherVertices()//função para realizar testes
         {
             vertice v;
@@ -61,38 +68,30 @@ namespace Grafo_2022_2
                 numVertices++;
             }
         }
-        public void CriarGrafoTeste()//função para realizar testes
+        //função para realizar testes
+        public void CriarGrafoTeste()
         {
-                PreencherVertices();
+            PreencherVertices();
         }
-
         //Gerar uma lista com os vertices e seus pesos e preencher a matriz com os vertices.
         public List<vertice> vertices = new List<vertice>();
-
         //Gerar um contador de vertices no Grafo
         public int numVertices = 0;
-
         //Exibir o Grafo gerado
         public void exibirGrafo()
         {
             //Valida a quantidade de vertices, inciando em 0.
-            Console.WriteLine("Grafo possui {0} vértices. /n/n", numVertices);
+            Console.WriteLine("Grafo possui {0} vértices. \n\n", numVertices);
 
             //informa todos os vertices e seus atributos
             foreach (vertice v in vertices)
             {
                 //Gerar informação do identificador do vertice, seu peso e sua cor
                 Console.Write("Vértice {0}, valor: {1}, cor: {2} é adjacente a: ", v.Id_Vertice, v.Id_Peso, v.Id_Cor);
+                Console.WriteLine();
                 //Gerar um relatório de quais os vertices que eles alcançam - ao menos deveria
                 foreach (vertice.aresta V_aux in v.adjacencias)
-                    Console.Write("{0} ", V_aux.Id_Destino);
-                //informa todas as arestas e onde elas alcançam
-                foreach (vertice.aresta a in v.adjacencias)
-                {
-                    Console.WriteLine("{0} ", a.Id_Destino);
-                    Console.WriteLine("Distancia de {0} a {1}: {2}", v.Id_Vertice, a.Id_Destino, a.Peso_Distancia);
-                }
-                Console.WriteLine();
+                    Console.Write("Vertice adjacente: \n", V_aux.Id_Destino);
             }
         }
         //verificar por nome do vertice
@@ -137,7 +136,6 @@ namespace Grafo_2022_2
             vertice VerAux1, VerAux2; //dois vertices auxiliares para instanciar
             vertice.aresta Va; //instaciar a aresta do vertice
             int i;
-
             //Valida se existe os vertices no grafo
             if (existeVertice(V_a1) != null || existeVertice(V_a2) != null)
                 Console.WriteLine("Um dos dois vértices ({0} ou {1}) não existe no grafo.", V_a1, V_a2);
@@ -157,12 +155,10 @@ namespace Grafo_2022_2
                     Va = new vertice.aresta();
                     Va.Id_Destino = VerAux2.Id_Vertice;
                     i = 0;
-
                     while ((i < vertices.Count) && (vertices.ElementAt(i).Id_Vertice != VerAux1.Id_Vertice))
                         i++;
                     //Gera aresta do vertice 1 -> 2 e adiciona como objeto
                     vertices.ElementAt(i).adjacencias.Add(Va);
-
                     //gerar a aresta e apontar seu Id_Destino
                     Va = new vertice.aresta();
                     Va.Id_Destino = VerAux1.Id_Vertice;
@@ -208,7 +204,6 @@ namespace Grafo_2022_2
                 //primeiro validar a existencia dos vertices e se não existir finaliza
                 return (false);
         }
-
         public int posicaoVertice(string V_a1)
         {
             int i = 0;
@@ -303,60 +298,10 @@ namespace Grafo_2022_2
         {
             return (numVertices == 0);
         }
-        //apagar todo o grafo gerado
-        public void reiniciarGrafo()
+        public void ReiniciarGrafo()
         {
-            Console.WriteLine("Você deseja salvar o grafo? /n1 - Sim/n2 - Não");
-            int Opcao = int.Parse(Console.ReadLine());
-            do
-            {
-                switch (Opcao)
-                {
-                    case 1:
-                        SalvarGrafo();
-                        break;
-                    case 2:
-                vertices.Clear();
-                numVertices = 0;
-                break;
-            }
-            } while (true);
-        }
-        //Salvar todo o grafo gerado - ref: https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/linq/how-to-compute-column-values-in-a-csv-text-file-linq
-        public void SalvarGrafo() 
-        {
-            //criar uma pasta no c:
-            string Pasta_Grafo = @"C:\Grafo_Heron_2022\dados/";
-
-            if (!Directory.Exists(Pasta_Grafo))
-                Directory.CreateDirectory(Pasta_Grafo);
-            //string[] teste = File.ReadAllLines(Path.Combine(Pasta_Grafo, "Grafo.csv"));
-            //gerar o arquivo CSV na pasta grafo em C:
-            using StreamWriter Salvar_Grafo_Gerado = new StreamWriter(Path.Combine(Pasta_Grafo, "Grafo.csv"));
-            //using StreamWriter Salvar_Grafo_Gerado2 = new StreamWriter((@"C:\Grafo_Heron_2022dados//Grafo.txt"), true, Encoding.ASCII);
-
-            //salvar as informações do objeto vertice
-            foreach (vertice v in vertices)
-            {
-                Salvar_Grafo_Gerado.Write("Teste id vertice: {0}", v.Id_Vertice);
-                Salvar_Grafo_Gerado.WriteLine(v.Id_Peso);
-                Salvar_Grafo_Gerado.WriteLine(v.Id_Cor); //csv
-                foreach (vertice.aresta A_Aux in v.adjacencias)
-                {
-                    Salvar_Grafo_Gerado.WriteLine(A_Aux.Id_Destino);
-                    Salvar_Grafo_Gerado.WriteLine(A_Aux.Id_Destino);
-                }
-                // Salvar_Grafo_Gerado2.Equals(v); //txt
-                // Salvar_Grafo_Gerado.Close();
-                //salva as informações de arestas
-                foreach (vertice.aresta A_Aux in v.adjacencias)
-                {
-                    Salvar_Grafo_Gerado.WriteLine(A_Aux.Id_Destino);
-                    Salvar_Grafo_Gerado.WriteLine(A_Aux.Id_Destino);
-                }
-            }
-            Console.WriteLine("Arquivo Salvo");
-            Console.ReadKey();
+            vertices.Clear();
+            numVertices = 0;
         }
     }
 }
