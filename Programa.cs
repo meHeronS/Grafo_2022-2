@@ -15,7 +15,7 @@ namespace Grafo_2022_2
         static int menu()
         {
             Console.Clear();
-            Console.WriteLine("0 - preencher grafo aleatoriamente para testes"); //funcionava
+            Console.WriteLine("\n0 - preencher grafo aleatoriamente para testes"); //funcionava
             Console.WriteLine("1 - Exibir grafo");
             Console.WriteLine("2 - Incluir vértice");
             Console.WriteLine("3 - Incluir aresta");
@@ -30,7 +30,7 @@ namespace Grafo_2022_2
             Console.WriteLine("12 - dijkstra");
             Console.WriteLine("13 - Salvar o Grafo Gerado");
             Console.WriteLine("14 - Sair");
-            Console.Write("Opção Desejada: ");
+            Console.Write("\nOpção Desejada: ");
             
             return (int.Parse(Console.ReadLine()));            
         }
