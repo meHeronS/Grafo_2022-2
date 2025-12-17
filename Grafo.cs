@@ -1,13 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.IO;
 
-//gerar o grafo em si e suas operações
+// MELHORIA (2025): As bibliotecas System.Text e System.IO foram comentadas pois a responsabilidade
+// de manipulação de arquivos foi movida para a classe dedicada 'SaveGraphAlgorithm' (no arquivo Save.cs), seguindo o
+// Princípio da Responsabilidade Única (SRP).
+// using System.Text;
+// using System.IO;
+
 namespace Grafo_2022_2
 {
-    //Gerar os vertices do Grafo - objeto
+    /*
+    // CÓDIGO LEGADO (2022): Estrutura de Vértice e Aresta
+    // As classes 'vertice' e 'aresta' (aninhada) não seguiam as convenções de nomenclatura do C# (PascalCase).
+    // Os campos eram públicos, quebrando o encapsulamento. A aresta armazenava apenas o ID do destino (string),
+    // o que exigia buscas constantes e ineficientes no grafo para obter o objeto do vértice vizinho.
     public class vertice
     {
         //gerar um objeto Vertice com os atributos
@@ -28,280 +35,470 @@ namespace Grafo_2022_2
             //Pega e atribui um valor na aresta
             public string Id_Destino; //identifica a vertice destino - não orientado
             public int Peso_Distancia; //gera um valor entre os vertices - da um peso para a aresta
-
         }
     }
-    public class Grafo
+    */
+
+    // MELHORIA (2025): Classes 'Edge' (Aresta) e 'Vertex' (Vértice) refatoradas e traduzidas para Inglês.
+
+    /// <summary>
+    /// Represents an Edge (Aresta) in a graph, connecting a vertex to another with a weight.
+    /// (Anteriormente: Aresta)
+    /// </summary>
+    public class Edge
     {
-        //Lista teste utilizado para o metodo de teste de funcionamento dos metodos gerados, não utilizada mais
-        public List<vertice> Teste_vertices = new List<vertice>();
-        //função para realizar testes, total convicção que funciona
-        public void preencheGrafo()
+        // MELHORIA (Performance): Edge now stores the direct reference to the destination 'Vertex' object.
+        // This avoids repeated and inefficient searches (O(n)) in the main vertex list.
+        // (Anteriormente: Id_Destino [string])
+        public Vertex Destination { get; private set; }
+
+        // MELHORIA (Nomenclatura e Encapsulamento): Property 'Weight' with standard name and public setter.
+        // (Anteriormente: Peso_Distancia)
+        public int Weight { get; set; }
+
+        public Edge(Vertex destination, int weight)
         {
-            vertice v;
-            for (int i = 1; i < 4; i++)
+            Destination = destination;
+            Weight = weight;
+        }
+    }
+
+    /// <summary>
+    /// Represents a Vertex (Vértice) or Node in a graph.
+    /// (Anteriormente: vertice)
+    /// </summary>
+    public class Vertex
+    {
+        // MELHORIA (Nomenclatura e Encapsulamento): Properties follow PascalCase standard.
+        // The setter for 'Id' is private to ensure the identifier is not changed after creation.
+        // (Anteriormente: Id_Vertice)
+        public string Id { get; private set; }
+
+        // (Anteriormente: Id_Peso)
+        public int Weight { get; set; }
+
+        // (Anteriormente: Id_Cor)
+        public int Color { get; set; } = 0; // Initialized with 0 (no color).
+
+        // MELHORIA (Estrutura): The adjacency list is now a list of 'Edge' objects,
+        // containing both destination and weight, making graph navigation more efficient.
+        // (Anteriormente: adjacencias)
+        public List<Edge> Adjacencies { get; private set; } = new List<Edge>();
+
+        // MELHORIA (Clareza): Attributes for Dijkstra's algorithm with clear names and default values.
+        // Replaces the old 'rotulo' and 'permanente'.
+        // (Anteriormente: rotulo)
+        public int Distance { get; set; } = int.MaxValue;
+        // (Anteriormente: permanente)
+        public bool Visited { get; set; } = false;
+        public Vertex Predecessor { get; set; } = null;
+
+        public Vertex(string id, int weight)
+        {
+            Id = id;
+            Weight = weight;
+        }
+    }
+
+    /// <summary>
+    /// Main class representing the Graph data structure.
+    /// (Anteriormente: Grafo)
+    /// </summary>
+    public class Graph
+    {
+        // MELHORIA (2025): Replacement of 'List<vertice>' with 'Dictionary<string, Vertex>'.
+        // Searching for a vertex in a list has O(n) complexity. In a dictionary (hash map),
+        // the search has constant time complexity, O(1), which is drastically faster for large graphs.
+        // (Anteriormente: vertices [List])
+        private readonly Dictionary<string, Vertex> _vertices = new Dictionary<string, Vertex>();
+
+        // MELHORIA (2025): The vertex counter was replaced by a public property
+        // getting the value directly from the dictionary.
+        // (Anteriormente: numVertices)
+        public int VertexCount => _vertices.Count;
+
+        // MELHORIA (2025): Exposes the vertex collection safely (read-only)
+        // via an interface (IEnumerable).
+        public IEnumerable<Vertex> Vertices => _vertices.Values;
+
+        /// <summary>
+        /// Displays the graph's adjacency list in the console.
+        /// (Anteriormente: exibirGrafo)
+        /// </summary>
+        public void DisplayGraph()
+        {
+            /*
+            // CÓDIGO LEGADO (2022):
+            public void exibirGrafo()
             {
-                v = new vertice();
-                v.Id_Vertice = i.ToString(); //nomeia
-                v.Id_Peso = i; //da peso pro vertice
-                Teste_vertices.Add(v); //adiciona na lista
-                numVertices++;
-                if (i == 2)
+                Console.WriteLine("Grafo possui {0} vértices. \n\n", numVertices);
+                foreach (vertice v in vertices)
                 {
-                    incluirAresta(1.ToString(), 2.ToString(), 100);
-                    adjacentes(1.ToString(), 2.ToString());
+                    Console.Write("Vértice {0}, valor: {1}, cor: {2} é adjacente a: ", v.Id_Vertice, v.Id_Peso, v.Id_Cor);
+                    Console.WriteLine();
+                    foreach (vertice.aresta V_aux in v.adjacencias)
+                        Console.Write("Vertice adjacente: \n", V_aux.Id_Destino);
+                }
+            }
+            */
+
+            // MELHORIA (2025):
+            // Uses string interpolation and 'string.Join' to create a clean representation.
+            Console.WriteLine($"\n--- Lista de Adjacências do Grafo ({VertexCount} vértices) ---");
+            foreach (var vertex in Vertices)
+            {
+                var adjacencies = string.Join(", ", vertex.Adjacencies.Select(a => $"{a.Destination.Id}({a.Weight})"));
+                Console.WriteLine($"Vértice {vertex.Id} -> [ {adjacencies} ]");
+            }
+            Console.WriteLine("-----------------------------------------------------\n");
+        }
+
+        /// <summary>
+        /// Adds a new vertex to the graph.
+        /// (Anteriormente: incluirVertice)
+        /// </summary>
+        /// <param name="id">The vertex identifier (Anteriormente: _Name)</param>
+        /// <param name="weight">The vertex weight (Anteriormente: _Peso)</param>
+        public void AddVertex(string id, int weight)
+        {
+            /*
+            // CÓDIGO LEGADO (2022):
+            public void incluirVertice(string _Name, int _Peso)
+            {
+                vertice v = new vertice();
+                v.Id_Vertice = _Name;
+                v.Id_Peso = _Peso;
+                if (existeVertice(v.Id_Vertice) != null)
+                    Console.WriteLine("Vértice {0} já existe no Grafo.", v.Id_Vertice);
+                else {
+                    vertices.Add(v);
+                    numVertices++;
+                }
+            }
+            */
+
+            // MELHORIA (2025):
+            // A busca 'ContainsKey' em um Dictionary é O(1), muito mais rápida.
+            // O novo vértice só é criado se o ID não existir, evitando alocação desnecessária.
+            if (!_vertices.ContainsKey(id))
+            {
+                var newVertex = new Vertex(id, weight);
+                _vertices.Add(id, newVertex);
+            }
+            else
+            {
+                Console.WriteLine($"AVISO: Vértice com ID '{id}' já existe no grafo.");
+            }
+        }
+
+        /// <summary>
+        /// Adds an undirected edge between two vertices.
+        /// (Anteriormente: incluirAresta)
+        /// </summary>
+        /// <param name="sourceId">Source vertex ID (Anteriormente: V_a1)</param>
+        /// <param name="destinationId">Destination vertex ID (Anteriormente: V_a2)</param>
+        /// <param name="weight">Edge weight (Anteriormente: Peso_Distancia)</param>
+        public void AddEdge(string sourceId, string destinationId, int weight)
+        {
+            /*
+            // CÓDIGO LEGADO (2022):
+            public void incluirAresta(string V_a1, string V_a2, int Peso_Distancia)
+            {
+                // ... (código complexo com vários loops e chamadas a existeVertice) ...
+            }
+            */
+
+            // MELHORIA (2025):
+            // A busca por ambos os vértices é O(1) usando 'TryGetValue'.
+            // A verificação de adjacência é mais limpa e a aresta armazena a referência direta ao objeto.
+            if (_vertices.TryGetValue(sourceId, out var source) && _vertices.TryGetValue(destinationId, out var destination))
+            {
+                // Verifica se a aresta já existe para evitar duplicatas.
+                if (source.Adjacencies.Any(a => a.Destination == destination))
+                {
+                    Console.WriteLine($"AVISO: Aresta entre '{sourceId}' e '{destinationId}' já existe.");
+                    return;
+                }
+
+                // Adiciona a aresta nos dois sentidos para um grafo não direcionado.
+                source.Adjacencies.Add(new Edge(destination, weight));
+                destination.Adjacencies.Add(new Edge(source, weight));
+            }
+            else
+            {
+                Console.WriteLine($"ERRO: Um dos vértices ('{sourceId}' ou '{destinationId}') não foi encontrado.");
+            }
+        }
+
+        /// <summary>
+        /// Removes a vertex and all connected edges.
+        /// (Anteriormente: removerVertice)
+        /// </summary>
+        /// <param name="id">Vertex ID (Anteriormente: V_a1)</param>
+        public void RemoveVertex(string id)
+        {
+            /*
+            // CÓDIGO LEGADO (2022):
+            public void removerVertice(string V_a1)
+            {
+                // ... (código complexo com loops aninhados e chamadas a posicaoAresta/removerAresta) ...
+            }
+            */
+
+            // MELHORIA (2025):
+            // A remoção do vértice principal do dicionário é O(1).
+            // A remoção das arestas de referência é feita de forma mais limpa e declarativa com LINQ.
+            if (_vertices.Remove(id))
+            {
+                // Itera sobre os vértices restantes para remover as arestas que apontavam para o vértice removido.
+                foreach (var vertex in Vertices)
+                {
+                    vertex.Adjacencies.RemoveAll(edge => edge.Destination.Id == id);
+                }
+            }
+            else
+            {
+                Console.WriteLine($"ERRO: Vértice '{id}' não encontrado para remoção.");
+            }
+        }
+
+        /// <summary>
+        /// Removes an edge between two vertices.
+        /// (Anteriormente: removerAresta)
+        /// </summary>
+        /// <param name="sourceId">Source vertex ID (Anteriormente: V_a1)</param>
+        /// <param name="destinationId">Destination vertex ID (Anteriormente: V_a2)</param>
+        public void RemoveEdge(string sourceId, string destinationId)
+        {
+            /*
+            // CÓDIGO LEGADO (2022):
+            public void removerAresta(string V_a1, string V_a2)
+            {
+                // ... (código com chamadas a posicaoVertice e posicaoAresta) ...
+            }
+            */
+
+            // MELHORIA (2025):
+            if (_vertices.TryGetValue(sourceId, out var source) && _vertices.TryGetValue(destinationId, out var destination))
+            {
+                // Usa o método 'RemoveAll' do LINQ, que é mais eficiente e legível
+                // do que encontrar o índice e depois remover pelo índice.
+                int removedSource = source.Adjacencies.RemoveAll(a => a.Destination == destination);
+                int removedDest = destination.Adjacencies.RemoveAll(a => a.Destination == source);
+
+                if (removedSource == 0 || removedDest == 0)
+                {
+                    Console.WriteLine($"AVISO: Aresta entre '{sourceId}' e '{destinationId}' não existia.");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"ERRO: Um dos vértices ('{sourceId}' ou '{destinationId}') não foi encontrado.");
+            }
+        }
+
+        /// <summary>
+        /// Checks if two vertices are adjacent.
+        /// (Anteriormente: adjacentes)
+        /// </summary>
+        /// <param name="sourceId">Source vertex ID (Anteriormente: V_a1)</param>
+        /// <param name="destinationId">Destination vertex ID (Anteriormente: V_a2)</param>
+        public bool AreAdjacent(string sourceId, string destinationId)
+        {
+            /*
+            // CÓDIGO LEGADO (2022):
+            public bool adjacentes(string V_a1, string V_a2)
+            {
+                // ... (loops) ...
+            }
+            */
+
+            // MELHORIA (2025):
+            if (_vertices.TryGetValue(sourceId, out var source))
+            {
+                // Usa LINQ (.Any) para uma verificação mais limpa e declarativa.
+                // A lógica é mais direta: "Existe alguma aresta na lista de adjacências da origem
+                // cujo destino é o vértice destino?"
+                return source.Adjacencies.Any(a => a.Destination.Id == destinationId);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Checks if the graph is complete (all vertices connected to all others).
+        /// (Anteriormente: completo)
+        /// </summary>
+        public bool IsComplete()
+        {
+            /*
+            // CÓDIGO LEGADO (2022):
+            public bool completo()
+            {
+                foreach (vertice v in vertices)
+                    if (v.adjacencias.Count < (numVertices - 1))
+                        return (false);
+                return (true);
+            }
+            */
+
+            // MELHORIA (2025): A lógica é a mesma, mas usa as novas propriedades e LINQ para maior clareza.
+            // Um grafo é completo se cada um de seus 'n' vértices se conecta a todos os outros (n-1) vértices.
+            int n = VertexCount;
+            if (n <= 1) return true;
+
+            return Vertices.All(vertex => vertex.Adjacencies.Count == n - 1);
+        }
+
+        /// <summary>
+        /// Checks if the graph is totally disconnected (no edges).
+        /// (Anteriormente: totalmenteDesconexo)
+        /// </summary>
+        public bool IsTotallyDisconnected()
+        {
+            /*
+            // CÓDIGO LEGADO (2022):
+            public bool totalmenteDesconexo()
+            {
+                foreach (vertice v in vertices)
+                    if (v.adjacencias.Count != 0)
+                        return (false);
+                return (true);
+            }
+            */
+
+            // MELHORIA (2025): Simplificado com LINQ. Verifica se 'todos' os vértices
+            // têm uma contagem de adjacências igual a zero.
+            return Vertices.All(v => v.Adjacencies.Count == 0);
+        }
+
+        /// <summary>
+        /// Checks if the graph is empty (no vertices).
+        /// (Anteriormente: vazio)
+        /// </summary>
+        public bool IsEmpty()
+        {
+            return VertexCount == 0;
+        }
+
+        /// <summary>
+        /// Clears the graph (removes all vertices and edges).
+        /// (Anteriormente: ReiniciarGrafo)
+        /// </summary>
+        public void ResetGraph()
+        {
+            /*
+            // CÓDIGO LEGADO (2022):
+            public void ReiniciarGrafo()
+            {
+                vertices.Clear();
+                numVertices = 0;
+            }
+            */
+
+            // MELHORIA (2025): A lógica é encapsulada. Em vez de limpar a lista e zerar o contador
+            // externamente, o próprio grafo se encarrega de limpar seu dicionário de vértices.
+            _vertices.Clear();
+        }
+
+        /// <summary>
+        /// Helper method to get a vertex by ID.
+        /// (Anteriormente: existeVertice)
+        /// </summary>
+        /// <param name="id">Vertex ID</param>
+        public Vertex GetVertexById(string id)
+        {
+            _vertices.TryGetValue(id, out var vertex);
+            return vertex; // Retorna o vértice se encontrado, ou null caso contrário.
+        }
+
+        /// <summary>
+        /// Generates a random test graph with vertices and edges.
+        /// (Gera um grafo de teste aleatório com vértices e arestas para facilitar a validação.)
+        /// (Anteriormente: CriarGrafoTeste / preencheGrafo)
+        /// </summary>
+        public void GenerateTestGraph(int vertexCount = 10, int edgeCount = 15)
+        {
+            Random rnd = new Random();
+            
+            // 1. Criar Vértices
+            for (int i = 0; i < vertexCount; i++)
+            {
+                string id = i.ToString();
+                if (!_vertices.ContainsKey(id))
+                {
+                    AddVertex(id, rnd.Next(1, 100)); // Peso aleatório entre 1 e 100
                 }
             }
 
-        }
-        //função para realizar testes
-        public void PreencherVertices()//função para realizar testes
-        {
-            vertice v;
-            for (int i = 0; i < 10; i++)
+            // 2. Criar Arestas Aleatórias
+            var keys = _vertices.Keys.ToList();
+            for (int i = 0; i < edgeCount; i++)
             {
-                v = new vertice();
-                v.Id_Vertice = i.ToString();
-                v.Id_Peso = i;
-                Teste_vertices.Add(v);
-                vertices.Add(v);
-                numVertices++;
-            }
-        }
-        //função para realizar testes
-        public void CriarGrafoTeste()
-        {
-            PreencherVertices();
-        }
-        //Gerar uma lista com os vertices e seus pesos e preencher a matriz com os vertices.
-        public List<vertice> vertices = new List<vertice>();
-        //Gerar um contador de vertices no Grafo
-        public int numVertices = 0;
-        //Exibir o Grafo gerado
-        public void exibirGrafo()
-        {
-            //Valida a quantidade de vertices, inciando em 0.
-            Console.WriteLine("Grafo possui {0} vértices. \n\n", numVertices);
-
-            //informa todos os vertices e seus atributos
-            foreach (vertice v in vertices)
-            {
-                //Gerar informação do identificador do vertice, seu peso e sua cor
-                Console.Write("Vértice {0}, valor: {1}, cor: {2} é adjacente a: ", v.Id_Vertice, v.Id_Peso, v.Id_Cor);
-                Console.WriteLine();
-                //Gerar um relatório de quais os vertices que eles alcançam - ao menos deveria
-                foreach (vertice.aresta V_aux in v.adjacencias)
-                    Console.Write("Vertice adjacente: \n", V_aux.Id_Destino);
-            }
-        }
-        //verificar por nome do vertice
-        public vertice existeVertice(string n)
-        {
-            vertice Aux = null;
-            int i;
-
-            i = 0;
-            //Corre a lista e verifica nome a nome a existencia do vértice
-            while ((i < vertices.Count) && (vertices.ElementAt(i).Id_Vertice != n))
-
-                i++;
-
-            if (i == vertices.Count) //se não tiver retorno, o metodo fica vazio
-                return Aux = null;
-            else //se houver algum retorno, ele volta o vertice instanciado.
-                Aux = vertices.ElementAt(i);
-            return Aux;
-        }
-        //Adicionar vertices
-        public void incluirVertice(string _Name, int _Peso)
-        {
-            //vertice auxiliar
-            vertice v = new vertice();
-            v.Id_Vertice = _Name;
-            v.Id_Peso = _Peso;
-
-            //envia o vertice que está sendo inserido no sistema
-            if (existeVertice(v.Id_Vertice) != null)
-                Console.WriteLine("Vértice {0} já existe no Grafo.", v.Id_Vertice);
-            else //após a validação se não existir ele é inserido no sistema
-            {
-                //Adiciona o vertice na lista
-                vertices.Add(v);
-                numVertices++;
-            }
-        }
-        //adicionar arestas não orientadas - ao menos deveria
-        public void incluirAresta(string V_a1, string V_a2, int Peso_Distancia)
-        {
-            vertice VerAux1, VerAux2; //dois vertices auxiliares para instanciar
-            vertice.aresta Va; //instaciar a aresta do vertice
-            int i;
-            //Valida se existe os vertices no grafo
-            if (existeVertice(V_a1) != null || existeVertice(V_a2) != null)
-                Console.WriteLine("Um dos dois vértices ({0} ou {1}) não existe no grafo.", V_a1, V_a2);
-            else
-            {
-                if (adjacentes(V_a1, V_a2))
-                    Console.WriteLine("{0} e {1} já são adjacentes no grafo.", V_a1, V_a2);
-                else
+                string source = keys[rnd.Next(keys.Count)];
+                string dest = keys[rnd.Next(keys.Count)];
+                
+                // Evitar laços (origem == destino) e arestas duplicadas
+                if (source != dest && !AreAdjacent(source, dest))
                 {
-                    //setar as vertices auxiliares ponta a ponta na lista de arestas
-                    //vertice inicial
-                    VerAux1 = existeVertice(V_a1);
-                    //vertice final
-                    VerAux2 = existeVertice(V_a2);
-
-                    //gerar a aresta e apontar seu Id_Destino
-                    Va = new vertice.aresta();
-                    Va.Id_Destino = VerAux2.Id_Vertice;
-                    i = 0;
-                    while ((i < vertices.Count) && (vertices.ElementAt(i).Id_Vertice != VerAux1.Id_Vertice))
-                        i++;
-                    //Gera aresta do vertice 1 -> 2 e adiciona como objeto
-                    vertices.ElementAt(i).adjacencias.Add(Va);
-                    //gerar a aresta e apontar seu Id_Destino
-                    Va = new vertice.aresta();
-                    Va.Id_Destino = VerAux1.Id_Vertice;
-                    i = 0;
-
-                    while ((i < vertices.Count) && (vertices.ElementAt(i).Id_Vertice != VerAux2.Id_Vertice))
-                        i++;
-                    //Gera aresta do vertice 2 -> 1 e adiciona como objeto
-                    vertices.ElementAt(i).adjacencias.Add(Va);
+                    AddEdge(source, dest, rnd.Next(1, 50)); // Peso aleatório entre 1 e 50
                 }
             }
+            
+            Console.WriteLine($"\nSUCESSO: Grafo de teste gerado com {vertexCount} vértices e arestas aleatórias.");
         }
-        //Valida se já existe a ajacencia entre os vertices
-        public bool adjacentes(string V_a1, string V_a2)
+
+        /// <summary>
+        /// Checks if the graph is Eulerian (contains an Eulerian Cycle).
+        /// A graph is Eulerian if it is connected (ignoring isolated vertices) and every vertex has an even degree.
+        /// (Verifica se o grafo é Euleriano: Conexo e todos os vértices com grau par.)
+        /// (Anteriormente: euleriano)
+        /// </summary>
+        public bool IsEulerian()
         {
-            vertice v;
-            int i;
+            // 1. Check connectivity (ignoring isolated vertices)
+            if (!IsConnected())
+                return false;
 
-            //primeiro validar a existencia dos vertices
-            if (existeVertice(V_a1) != null && existeVertice(V_a2) != null)
+            // 2. Check if every vertex has an even degree
+            foreach (var vertex in Vertices)
             {
-                i = 0;
-                //varrer a lista de vertices e encontrar o vertice inicial
-                while (vertices.ElementAt(i).Id_Vertice != V_a1)
-                    i++;
-
-                v = vertices.ElementAt(i);
-
-                i = 0;
-
-                //varrer a lista de vertices e encontrar o vertice inicial e validar se encontra alguma adjacencia entre eles
-                while ((i < v.adjacencias.Count) && (v.adjacencias.ElementAt(i).Id_Destino != V_a2))
-                    i++;
-
-                //se rodar toda a lista e não encotrar
-                if (i == v.adjacencias.Count)
-                    return (false);
-                //se rodar toda a lista e encotrar
-                else
-                    return (true);
+                if (vertex.Adjacencies.Count % 2 != 0)
+                    return false;
             }
-            else
-                //primeiro validar a existencia dos vertices e se não existir finaliza
-                return (false);
+
+            return true;
         }
-        public int posicaoVertice(string V_a1)
+
+        /// <summary>
+        /// Helper method to check if all non-zero degree vertices are connected.
+        /// </summary>
+        private bool IsConnected()
         {
-            int i = 0;
-            //validar a existencia do vertice e suas adjacencias
+            var verticesWithEdges = Vertices.Where(v => v.Adjacencies.Count > 0).ToList();
+            
+            if (verticesWithEdges.Count == 0) return true; // Trivial case
 
-            //verifica a existencia de vertices e valida todas suas adjacencias
-            while ((existeVertice(V_a1) != null) && (i < existeVertice(V_a1).adjacencias.Count) && (vertices.ElementAt(i).Id_Vertice != existeVertice(V_a1).Id_Vertice))
-                i++;
+            var startVertex = verticesWithEdges.First();
+            var visited = new HashSet<string>();
+            var queue = new Queue<Vertex>();
+            
+            queue.Enqueue(startVertex);
+            visited.Add(startVertex.Id);
 
-            if (i == vertices.Count)
-                return (-1);
-            else
-                return (i);
-
-        }
-        //pega a lista de adjacencia e valida se existe o vertice e gera a sequencia de posição ao vertice 1 -> 2
-        public int posicaoAresta(List<vertice.aresta> adjacencias, string V_a1)
-        {
-            int i = 0;
-
-            //validar a existencia do vertice e suas arestas
-            while ((existeVertice(V_a1) != null) && (i < adjacencias.Count) && (adjacencias.ElementAt(i).Id_Destino != V_a1))
-                i++;
-
-            if (i == adjacencias.Count)
-                return (-1);
-            else
-                return (i);
-
-        }
-        //remover o vertice
-        public void removerVertice(string V_a1)
-        {
-            int i;
-            //validar a existencia do vertice no Grafo
-            if (existeVertice(V_a1) != null)
-                Console.WriteLine("O vértice {0} não existe no Grafo.", V_a1);
-            else
+            while (queue.Count > 0)
             {
-                foreach (vertice V_a2 in vertices)
+                var current = queue.Dequeue();
+                foreach (var edge in current.Adjacencies)
                 {
-                    //valida as adjacencias de vertices
-                    i = posicaoAresta(V_a2.adjacencias, V_a1);
-                    if (i != -1)
-                        //valida as arestas e remove
-                        removerAresta(V_a1, V_a2.Id_Vertice);
+                    if (!visited.Contains(edge.Destination.Id))
+                    {
+                        visited.Add(edge.Destination.Id);
+                        queue.Enqueue(edge.Destination);
+                    }
                 }
-                //remove vertices na lista corretamente
-                vertices.RemoveAt(posicaoVertice(V_a1));
-                numVertices--;
             }
-        }
-        //Remover aresta
-        public void removerAresta(string V_a1, string V_a2)
-        {
-            //auxiliar os posicionamentos dos vertices e remover as arestas corretamente
-            int i, j;
 
-            if (!adjacentes(V_a1, V_a2))
-                Console.WriteLine("Os vértices {0} e {1} não são adjacentes.", V_a1, V_a2);
-            else
-            {
-                i = posicaoVertice(V_a1);
-                j = posicaoAresta(vertices.ElementAt(i).adjacencias, V_a2);
-                vertices.ElementAt(i).adjacencias.RemoveAt(j);
-
-                i = posicaoVertice(V_a2);
-                j = posicaoAresta(vertices.ElementAt(i).adjacencias, V_a1);
-                vertices.ElementAt(i).adjacencias.RemoveAt(j);
-            }
-        }
-        //Validar se o Grafo é completo
-        public bool completo()
-        {
-            foreach (vertice v in vertices)
-                if (v.adjacencias.Count < (numVertices - 1))
-                    return (false);
-
-            return (true);
-        }
-        //Validar se o Grafo é completamente desconexo
-        public bool totalmenteDesconexo()
-        {
-            foreach (vertice v in vertices)
-                if (v.adjacencias.Count != 0)
-                    return (false);
-
-            return (true);
-        }
-        //Validar se o Grafo existe
-        public bool vazio()
-        {
-            return (numVertices == 0);
-        }
-        public void ReiniciarGrafo()
-        {
-            vertices.Clear();
-            numVertices = 0;
+            return verticesWithEdges.All(v => visited.Contains(v.Id));
         }
     }
 }

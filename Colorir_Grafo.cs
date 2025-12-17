@@ -1,15 +1,20 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
+
+// MELHORIA (2025): Bibliotecas desnecessárias comentadas.
+// using System.Text;
+// using System.Threading.Tasks;
+// using System.IO;
 
 namespace Grafo_2022_2
 {
+    /*
+    // CÓDIGO LEGADO (2022):
+    // Mantido para histórico. A implementação original misturava interface com lógica e usava algoritmos menos eficientes.
     class Colorir_Grafo
     {
-        /*tentativa de colorir o grafo - referenciado código usando C++: https://acervolima.com/minimize-o-custo-para-colorir-todos-os-vertices-de-um-grafico-nao-direcionado-usando-determinada-operacao/ - ideia baseada naquela parada do slide Grafo Adjunto (ou Grafo de Linha) do slide (22-Coloração - Guloso - Welsh-Powell.pptx)*/
+        // tentativa de colorir o grafo - referenciado código usando C++: https://acervolima.com/minimize-o-custo-para-colorir-todos-os-vertices-de-um-grafico-nao-direcionado-usando-determinada-operacao/ - ideia baseada naquela parada do slide Grafo Adjunto (ou Grafo de Linha) do slide (22-Coloração - Guloso - Welsh-Powell.pptx)
         //iria tentar fazer uma inteface no visual basic para tentar fazer alguma coisa com cores hexadecimais, mas não deu certo e ai so atribui numero
         //iria tentar usar: https://www.macoratti.net/18/10/c_hexacor1.htm - para validar de acordo com a numeração de hexadecimal
         public void colorirGrafo(Grafo G)
@@ -82,5 +87,99 @@ namespace Grafo_2022_2
 
         }
     }
-}
+    */
 
+    // MELHORIA (2025): Algoritmo de Coloração refatorado.
+    // (Anteriormente: Colorir_Grafo)
+    public class GraphColoring
+    {
+        /// <summary>
+        /// Colors the graph allowing the user to choose the method.
+        /// (Colore o grafo permitindo ao usuário escolher o método.)
+        /// </summary>
+        public void ColorGraph(Graph graph)
+        {
+            if (graph.IsEmpty())
+            {
+                Console.WriteLine("O grafo está vazio. Nada para colorir.");
+                return;
+            }
+
+            Console.WriteLine("Digite a opção de coloração: \n- Pior solução (1 cor por vértice) = 1\n- Guloso (Welsh-Powell) = 2");
+            
+            if (!int.TryParse(Console.ReadLine(), out int opc))
+            {
+                Console.WriteLine("Opção inválida.");
+                return;
+            }
+
+            switch (opc)
+            {
+                case 1:
+                    // Pior solução: Cada vértice tem uma cor única.
+                    ApplyWorstCaseColoring(graph);
+                    break;
+                case 2:
+                    // Guloso: Heurística de Welsh-Powell (Ordenação por grau).
+                    ApplyGreedyColoring(graph);
+                    break;
+                default:
+                    Console.WriteLine("Opção inválida.");
+                    break;
+            }
+        }
+
+        private void ApplyWorstCaseColoring(Graph graph)
+        {
+            int color = 1;
+            foreach (var vertex in graph.Vertices)
+            {
+                vertex.Color = color++;
+                Console.WriteLine($"Vértice {vertex.Id} colorido com a cor {vertex.Color}");
+            }
+            Console.WriteLine($"\nColoração completa (Pior Caso). Total de cores usadas: {graph.VertexCount}");
+        }
+
+        private void ApplyGreedyColoring(Graph graph)
+        {
+            // 1. Reset all vertex colors to 0 (uncolored).
+            foreach (var v in graph.Vertices) v.Color = 0;
+
+            // 2. Welsh-Powell Heuristic: Sort vertices by degree (number of adjacencies) in descending order.
+            var sortedVertices = graph.Vertices.OrderByDescending(v => v.Adjacencies.Count).ToList();
+
+            int totalColorsUsed = 0;
+
+            // 3. Assign colors
+            foreach (var vertexToColor in sortedVertices)
+            {
+                // Find colors already used by neighbors.
+                var neighborColors = new HashSet<int>();
+                foreach (var edge in vertexToColor.Adjacencies)
+                {
+                    if (edge.Destination.Color != 0)
+                    {
+                        neighborColors.Add(edge.Destination.Color);
+                    }
+                }
+
+                // Find the first available color.
+                int newColor = 1;
+                while (neighborColors.Contains(newColor))
+                {
+                    newColor++;
+                }
+
+                vertexToColor.Color = newColor;
+                if (newColor > totalColorsUsed)
+                {
+                    totalColorsUsed = newColor;
+                }
+                
+                Console.WriteLine($"Vértice {vertexToColor.Id} colorido com a cor {vertexToColor.Color}");
+            }
+
+            Console.WriteLine($"\nColoração completa (Guloso/Welsh-Powell). Total de cores usadas: {totalColorsUsed}");
+        }
+    }
+}
